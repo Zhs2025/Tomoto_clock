@@ -15,7 +15,7 @@
 		{
 			"path": "pages/addtimer/addtimer",
 			"style": {
-				"navigationBarTitleText": "添加计时器"
+				"navigationBarTitleText": "添加专注任务"
 			}
 		},
 		{

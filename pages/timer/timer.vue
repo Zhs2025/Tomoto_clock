@@ -172,13 +172,9 @@
 				this[`${fulltype}List`] = fullList;
 				let mid = Math.floor(loop / 2) * len;
 				this[`currentIndex${type.toUpperCase()}`] = mid + defaultnumber;
-				
-				console.log(`currentIndex${type.toUpperCase()}`);
-				
+				//console.log(`currentIndex${type.toUpperCase()}`);
 				this[`scrollTop${type.toUpperCase()}`] = (mid + defaultnumber) * this.itemHeight;
-				
-				console.log(`scrollTop${type.toUpperCase()}`);
-				
+				//console.log(`scrollTop${type.toUpperCase()}`);
 				this[fulltype] = list[defaultnumber];
 				
 			},
@@ -331,13 +327,13 @@
 	  font-style: italic;
 	  color: #007aff;
 	}
-	/* 上方标题栏 */
+	/* 中部标题栏 */
 	.midheader {
 	  margin-top: 60rpx;
 	  width: 100%;
 	  height: 60rpx;
 	  padding: 0 30rpx;
-	  
+	  margin-bottom: 20rpx;
 	  display: flex;
 	  justify-content: space-between; /* 左右分开 */
 	  align-items: center;
@@ -360,7 +356,7 @@
 	.content {
 	  flex: 1;
 	  width: 100%;
-	  padding: 0 25rpx;
+	  padding: 0 rpx;
 	  box-sizing: border-box;
 	  min-height: 0;  /* ← 加这行，修复flex子元素不收缩的bug */
 	}
