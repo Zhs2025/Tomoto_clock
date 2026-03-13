@@ -18,37 +18,67 @@
 		  <view class="time-picker">
 			<!-- 时 -->
 			<view class="picker-box">
-			  <scroll-view scroll-y :scroll-top="scrollTopH" @scroll="onScrollH" @touchend="onEndH" class="picker-scroll">
-				<view class="picker-list">
-				  <view v-for="(num, idx) in hourList" :key="idx" class="picker-item">
-					{{ num }}
-				  </view>
-				</view>
+			  <scroll-view 
+			    scroll-y 
+			    :scroll-top="scrollTopH" 
+			    @scroll="onScrollH" 
+			    class="picker-scroll"
+			  >
+			    <view class="picker-list">
+			      <view 
+			        v-for="(num, index) in hourList" 
+			        :key="index" 
+			        class="picker-item"
+			      >
+			        {{ num }}
+			      </view>
+			    </view>
 			  </scroll-view>
 			</view>
+			
 			<!-- 分 -->
 			<view class="picker-box">
-			  <scroll-view scroll-y :scroll-top="scrollTopM" @scroll="onScrollM" @touchend="onEndM" class="picker-scroll">
-				<view class="picker-list">
-				  <view v-for="(num, idx) in minuteList" :key="idx" class="picker-item">
-					{{ num }}
-				  </view>
-				</view>
+			  <scroll-view 
+			    scroll-y 
+			    :scroll-top="scrollTopM" 
+			    @scroll="onScrollM" 
+			    class="picker-scroll"
+			  >
+			    <view class="picker-list">
+			      <view 
+			        v-for="(num, index) in minuteList" 
+			        :key="index" 
+			        class="picker-item"
+			      >
+			        {{ num }}
+			      </view>
+			    </view>
 			  </scroll-view>
 			</view>
+			
 			<!-- 秒 -->
 			<view class="picker-box">
-			  <scroll-view scroll-y :scroll-top="scrollTopS" @scroll="onScrollS" @touchend="onEndS" class="picker-scroll">
-				<view class="picker-list">
-				  <view v-for="(num, idx) in secondList" :key="idx" class="picker-item">
-					{{ num }}
-				  </view>
-				</view>
+			  <scroll-view 
+			    scroll-y 
+			    :scroll-top="scrollTopS" 
+			    @scroll="onScrollS" 
+			    class="picker-scroll"
+			  >
+			    <view class="picker-list">
+			      <view 
+			        v-for="(num, index) in secondList" 
+			        :key="index" 
+			        class="picker-item"
+			      >
+			        {{ num }}
+			      </view>
+			    </view>
 			  </scroll-view>
 			</view>
+		  
 		  </view>
 		</view>
-
+		
 		<!-- 下部一级容器 -->
 		<view class="bottom-section">
 			<!-- 下-上二级容器：输入框 + 点击下边框高亮 -->
@@ -88,22 +118,29 @@ export default {
   data() {
     return {
       // 轮盘基础配置
-      itemHeight: 60,
+      itemHeight: 100,
+	  // 计时器
+	  _timerH: null,
+	  _timerM: null,
+	  _timerS: null,
       // 时
       hourList: [],
-      currentH: 0,
+      currentIndexH: 0,
+      hour: 0,
       scrollTopH: 0,
-      tmpH: 0,
+      startScrollTopH: 0,
       // 分
       minuteList: [],
-      currentM: 0,
+      currentIndexM: 0,
+      minute: 0,
       scrollTopM: 0,
-      tmpM: 0,
+      startScrollTopM: 0,
       // 秒
       secondList: [],
-      currentS: 0,
+      currentIndexS: 0,
+      second: 0,
       scrollTopS: 0,
-      tmpS: 0,
+      startScrollTopS: 0,
 
       // 输入框
       inputText: "",
@@ -111,36 +148,65 @@ export default {
     };
   },
   onLoad() {
-    this.initWheel("hour", 0, 23);
-    this.initWheel("minute", 0, 59);
-    this.initWheel("second", 0, 59);
-  },
+		// 1. 定义 CSS 中的 rpx 值
+		const itemHeightRpx = 100;     
+		// 2. 转换为 px (这是 scroll-top 需要的单位)
+		this.itemHeight = uni.upx2px(itemHeightRpx);
+		this.initList("h", "hour", 0, 23, 0);
+		this.initList("m", "minute", 0, 59, 15);
+		this.initList("s", "second", 0, 59, 0);
+    },
   methods: {
     // ========== 初始化纯循环轮盘（单列表、无高亮） ==========
-    initWheel(type, min, max) {
-      let list = [];
-      for (let i = min; i <= max; i++) list.push(i);
-      this[`${type}List`] = list;
-      this[`scrollTop${type.toUpperCase()}`] = 0;
+    initList(type, fulltype, min, max, defaultnumber) {
+    	let list = [];
+    	for (let i = min; i <= max; i++) list.push(i);
+    	let len = list.length;
+    	let loop = 4;
+    	let fullList = [];
+    	for (let i = 0; i < loop; i++) fullList = fullList.concat(list);
+    	this[`${fulltype}List`] = fullList;
+    	let mid = Math.floor(loop / 2) * len;
+    	this[`currentIndex${type.toUpperCase()}`] = mid + defaultnumber;
+    	//console.log(`currentIndex${type.toUpperCase()}`);
+    	this[`scrollTop${type.toUpperCase()}`] = (mid + defaultnumber) * this.itemHeight;
+    	//console.log(`scrollTop${type.toUpperCase()}`);
+    	this[fulltype] = list[defaultnumber];
+    	
     },
 
-    // ========== 滚动监听 ==========
-    onScrollH(e) { this.tmpH = e.detail.scrollTop; },
-    onScrollM(e) { this.tmpM = e.detail.scrollTop; },
-    onScrollS(e) { this.tmpS = e.detail.scrollTop; },
+    // 滚动中, 获取当前滚动距离 (px)
+    onScrollH(e) {
+        this.startScrollTopH = e.detail.scrollTop;
+        if (this._timerH) clearTimeout(this._timerH);
+        this._timerH = setTimeout(() => {
+            this.handleEnd("h", "hour", this.startScrollTopH);
+        }, 150);
+    },
+    onScrollM(e) {
+        this.startScrollTopM = e.detail.scrollTop;
+        if (this._timerM) clearTimeout(this._timerM);
+        this._timerM = setTimeout(() => {
+            this.handleEnd("m", "minute", this.startScrollTopM);
+        }, 150);
+    },
+    onScrollS(e) {
+        this.startScrollTopS = e.detail.scrollTop;
+        if (this._timerS) clearTimeout(this._timerS);
+        this._timerS = setTimeout(() => {
+            this.handleEnd("s", "second", this.startScrollTopS);
+        }, 150);
+    },
 
     // ========== 滚动结束（纯循环） ==========
-    onEndH() { this.calc("H", "hour", this.tmpH); },
-    onEndM() { this.calc("M", "minute", this.tmpM); },
-    onEndS() { this.calc("S", "second", this.tmpS); },
-
-    calc(type, fulltype, top) {
-      const list = this[`${fulltype}List`];
-      const len = list.length;
-      let idx = Math.round(top / this.itemHeight);
-      let loopIdx = ((idx % len) + len) % len;
-      this[`current${type}`] = list[loopIdx];
-      this[`scrollTop${type}`] = loopIdx * this.itemHeight;
+    handleEnd(type, fulltype, top) {
+    	let idx = Math.round(top / this.itemHeight);
+    	let list = this[`${fulltype}List`];
+    	idx = Math.max(0, Math.min(idx, list.length - 1));
+    	this[`currentIndex${type.toUpperCase()}`] = idx;
+    	this[`scrollTop${type.toUpperCase()}`] = idx * this.itemHeight;
+    	let realVal = list[idx];
+    	this[fulltype] = realVal;
     },
 
     // ========== 输入框点击：下边框高亮 ==========
@@ -160,23 +226,44 @@ export default {
 	
     // ========== 点击右上角：返回上一页 + 传参 ==========
     goBackWithData() {
+      const time = `${this.hour}:${this.minute}:${this.second}`;
+      const text = this.inputText || '专注时间';
+      console.log(time);
+      console.log(text);
+      // 【关键】在这里生成唯一 ID，不需要 timer 页面配合维护 nextId
+      const newItem = {
+        id: Date.now(), // 例如：1710324567890，绝对唯一
+        title: text,
+        time: time
+      };
+       
+      console.log(newItem.id);
+    
+      // ======================================
+      // 【只修复这里：先拿上一页、先赋值，再返回】
+      // ======================================
+      const pages = getCurrentPages();
+      const prevPage = pages[pages.length - 2]; // 👈 修复成 -2
+      console.log(prevPage.route);
+      console.log(prevPage.$vm.data);
+      console.log(prevPage.$vm.list);
+      
+      if (prevPage) {
+        const currentList = prevPage.$vm.list || [];
+        // 直接合并
+        prevPage.setData({
+          list: [...currentList, newItem]
+        });
+		prevPage.$vm.list = [...currentList, newItem];
+      }
+      console.log(prevPage.$vm.list);
+    
+      // 然后再执行返回
       uni.navigateBack({
-        delta: 1,
-        success: () => {
-          const time = `${this.currentH}:${this.currentM}:${this.currentS}`;
-          const text = this.inputText;
-          
-          // 回传数据到上一页
-          const pages = getCurrentPages();
-          const prevPage = pages[pages.length - 2];
-          prevPage.setData({
-            selectedTime: time,
-            inputText: text
-          });
-        }
+        delta: 1
       });
     },
-
+		
     // ========== 底部点击：跳转到其他页面 ==========
     goToOtherPage() {
       uni.navigateTo({
@@ -218,7 +305,7 @@ export default {
   color: #007aff;
 }
 
-/* ====================== 中部：轮盘 ====================== */
+/* 中部：轮盘  */
 .middle-section {
   display: flex;
   align-items: flex-start; 
@@ -229,17 +316,42 @@ export default {
    margin-left: auto;
      margin-right: auto;
    
-     /* 【可选美化】增加圆角和阴影，让它更像一张独立的卡片 */
+     /* 增加圆角和阴影，让它更像一张独立的卡片 */
      border-radius: 20rpx;
      box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
      
-     /* 【可选】内部内边距，防止内容贴到白色边缘 */
+     /* 内部内边距，防止内容贴到白色边缘 */
      padding: 30rpx; 
 }
 .time-picker {
   display: flex;
+  position: relative; /* 【关键】作为定位父级 */
+  justify-content: space-around; /* 三个滚轮均匀分布 */
   width: 70%;
-  height: 360rpx;
+  height: 300rpx;
+}
+/* 【核心】绘制上下两条横线 */
+.time-picker::before,
+.time-picker::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1rpx; /* 线条粗细 */
+  background-color: rgba(0, 0, 0, 0.1); /* 线条颜色，淡灰色 */
+  z-index: 10; /* 确保线条在滚轮内容之上 */
+  pointer-events: none; /* 【至关重要】让点击事件穿透线条，不影响滚轮滑动 */
+}
+
+/* 上线：距离顶部的位置 = (容器高度 - 选中项高度) / 2 */
+/* 假设容器 400rpx, 选中项 80rpx -> (400-80)/2 = 160rpx */
+.time-picker::before {
+  top: 90rpx; 
+}
+
+/* 下线：距离底部的位置 = (容器高度 - 选中项高度) / 2 */
+.time-picker::after {
+  bottom: 110rpx;
 }
 .picker-box {
   flex: 1;
@@ -250,13 +362,13 @@ export default {
   height: 100%;
 }
 .picker-list {
-  padding: 170rpx 0;
+  padding: 100rpx 0;
 }
 .picker-item {
-  height: 60rpx;
+  height: 100rpx;
   line-height: 60rpx;
   text-align: center;
-  font-size: 32rpx;
+  font-size: 40rpx;
   color: #333;
 }
 

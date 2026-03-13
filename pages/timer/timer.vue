@@ -10,7 +10,6 @@
 				    scroll-y
 				    :scroll-top="scrollTopH"
 					@scroll="onScrollH"
-					
 					class="picker-scroll"
 				>
 					<view class="picker-list">
@@ -86,23 +85,24 @@
 		      </view>
 		</view>
 
+		<view class="content-scroll">
 		<!-- 下方内容区域（可滚动、占满剩余高度） -->
-		<scroll-view class="content" scroll-y>
+			<scroll-view class="content" scroll-y>
 			<!-- 循环显示列表项（二级子容器） -->
-			<view 
-				class="item" 
-				:class="{active: activeIndex === index}"
-				v-for="(item, index) in list" 
-				:key="index"
-				@click="setActive(index)"
-			>
-				<!-- 左三级子容器 -->
-				<view class="item-left">{{ item.title }}</view>
-				<!-- 右三级子容器 -->
-				<view class="item-right">{{ item.time }}</view>
-			</view>
-		</scroll-view>
-	
+				<view 
+					class="item" 
+					:class="{active: activeIndex === index}"
+					v-for="(item, index) in list" 
+					:key="item.id"
+					@click="setActive(index)"
+				>
+					<!-- 左三级子容器 -->
+					<view class="item-left">{{ item.title }}</view>
+					<!-- 右三级子容器 -->
+					<view class="item-right">{{ item.time }}</view>
+				</view>
+			</scroll-view>
+		</view>
 		<!-- 最底部悬浮按钮（最高层级、可点击、显示图片）  -->
 		<view class="float-bottom" @click="goBottomPage">
 		    <image class="float-img" src="/pages/timer/static/R-C.jpg"  mode="widthFix"></image>
@@ -142,9 +142,10 @@
 				startScrollTopS: 0,
 				// 时间列表初始配置
 				list: [
-					{ title: "读书", time: "01:00:00" },
-					{ title: "绘画", time: "02:00:00" },
-					{ title: "编程", time: "03:00:00" },
+				      { id: 1001, title: "读书", time: "01:00:00" },
+				      { id: 1002, title: "绘画", time: "02:00:00" },
+				      { id: 1003, title: "编程", time: "03:00:00" },
+					  
 				],
 				// 新增：记录当前点击的索引
 				activeIndex: -1, 
@@ -261,6 +262,8 @@
 	  background-color: #eeeeee;
 	  min-height: 100vh;  /* ← 加这行 */
 	  box-sizing: border-box;  /* ← 加这行，防止padding撑出屏幕 */
+	  height: 100vh;        /* 固定高度 = 屏幕高度，不被内容撑大 */
+	  overflow: hidden;     /* 超出部分直接隐藏，最关键 */
 	}
 	/* 时间轮盘 */
 	.time-picker {
@@ -314,18 +317,13 @@
 	  font-weight: bold;
 	}
 	/* 结果显示区域 */
-	.result-show {
-	  display: flex;
-	  width: 100%;    /* 父容器宽度铺满 */
-	  height: 60rpx; /* 统一高度，三个子元素都会继承 */
-	}
-	/* 结果 */
 	.result {
 	  margin-top: 60rpx;
-	  height: 100%;       /* 高度 = 父容器高度 */
+	  height: 60rpx;       /* 高度 = 父容器高度 */
 	  font-size: 30rpx;
 	  font-style: italic;
 	  color: #007aff;
+	  margin-bottom: 30rpx;
 	}
 	/* 中部标题栏 */
 	.midheader {
@@ -351,7 +349,12 @@
 	  font-size: 32rpx;
 	  color: #007aff;
 	}
-	
+	.content-scroll {
+		margin-top: 0rpx;
+		display: flex;
+		width: 100%;    
+		height: 640rpx; 
+	}
 	/* 下方内容区域（填满剩余高度） */
 	.content {
 	  flex: 1;
