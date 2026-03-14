@@ -85,6 +85,7 @@
 		      </view>
 		</view>
 
+		<!-- 下方内容区域（可滚动、占满剩余高度） -->
 		<view class="content-scroll">
 		<!-- 下方内容区域（可滚动、占满剩余高度） -->
 			<scroll-view class="content" scroll-y>
@@ -103,6 +104,7 @@
 				</view>
 			</scroll-view>
 		</view>
+		
 		<!-- 最底部悬浮按钮（最高层级、可点击、显示图片）  -->
 		<view class="float-bottom" @click="goBottomPage">
 		    <image class="float-img" src="/pages/timer/static/R-C.jpg"  mode="widthFix"></image>
@@ -219,11 +221,32 @@
 				});
 			},
 			
-			// 点击底部悬浮图片 → 跳转到新页面
+			// 点击底部悬浮图片 → 跳转到新页面（修复 NaN 版本）
 			goBottomPage() {
-				uni.navigateTo({
-					url: '/pages/timing/timing'  // 改成你自己的底部跳转页面
-				});
+			    console.log(this.$data)
+			    
+			    // 🔥 强制转数字，从根源消灭 NaN
+			    const h = Number(this.hour) || 0
+			    const m = Number(this.minute) || 0
+			    const s = Number(this.second) || 0
+			
+			    // 🔥 格式化时间：永远是 00:00:00 格式，永不出错
+			    const selectedTime = `${h}:${m}:${s}`
+			
+			    // 获取标题
+			    let inputText = ""
+			    if (this.activeIndex !== -1 && this.list[this.activeIndex]) {
+			        inputText = this.list[this.activeIndex].title
+			    }
+			
+			    // 输出调试
+			    console.log('最终传递时间：', selectedTime)
+			    console.log('最终传递标题：', inputText)
+			
+			    // 跳转
+			    uni.navigateTo({
+			        url: `/pages/timing/timing?selectedTime=${encodeURIComponent(selectedTime)}&inputText=${encodeURIComponent(inputText)}`
+			    })
 			},
 			
 			// 点击列表元素设置激活项
@@ -399,9 +422,14 @@
 	
 	/* 图片 */
 	.float-img {
-	  width: 150rpx;
-	  height: 150rpx;
-	  margin-bottom: 150rpx;
+	    width: 150rpx;
+		height: 150rpx;
+		/* 下面是固定定位关键代码 */
+		position: fixed;    /* 固定定位，脱离文档流 */
+		bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
+		left: 50%;          /* 水平居中 */
+		transform: translateX(-50%); /* 水平居中 */
+		z-index: 999;       /* 保证在最上层，不被盖住 */
 	}
 </style>
 

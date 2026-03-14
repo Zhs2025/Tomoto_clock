@@ -4,7 +4,7 @@
 		<!-- 上部一级容器 -->
 		<view class="top-section">
 			<!-- 左二级容器 -->
-			<view class="top-left" @click="goBackWithData">
+			<view class="top-left" @click="goBackWithoutData">
 				取消
 			</view>
 			<!-- 右二级容器：点击返回上一页 + 回传数据 -->
@@ -223,7 +223,12 @@ export default {
 		// 这里可能需要使用 nextTick 或定时器，视具体框架表现而定
 		// setTimeout(() => { this.inputActive = true; }, 10);
 	},
-	
+	// 点击取消，直接返回上一页
+	goBackWithoutData(){
+		uni.navigateTo({
+		  url: `/pages/timer/timer`,
+		});
+	},
     // ========== 点击右上角：返回上一页 + 传参 ==========
     goBackWithData() {
       const time = `${this.hour}:${this.minute}:${this.second}`;
@@ -246,6 +251,7 @@ export default {
       const prevPage = pages[pages.length - 2]; // 👈 修复成 -2
       console.log(prevPage.route);
       console.log(prevPage.$vm.data);
+	  console.log(prevPage.$vm);
       console.log(prevPage.$vm.list);
       
       if (prevPage) {
@@ -255,8 +261,11 @@ export default {
           list: [...currentList, newItem]
         });
 		prevPage.$vm.list = [...currentList, newItem];
+		const newIndex = prevPage.$vm.list.length - 1;
+		prevPage.$vm.setActive(newIndex); 
       }
       console.log(prevPage.$vm.list);
+	  
     
       // 然后再执行返回
       uni.navigateBack({
