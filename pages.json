@@ -23,6 +23,12 @@
 			"style": {
 				"navigationBarTitleText": "计时"
 			}
+		},
+		{
+			"path": "pages/bgm/bgm",
+			"style": {
+				"navigationBarTitleText": "背景音乐"
+			}
 		}
 	],
 	"globalStyle": {

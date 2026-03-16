@@ -276,7 +276,7 @@ export default {
     // ========== 底部点击：跳转到其他页面 ==========
     goToOtherPage() {
       uni.navigateTo({
-        url: "/pages/other/other"
+        url: "/pages/bgm/bgm"
       });
     }
   }

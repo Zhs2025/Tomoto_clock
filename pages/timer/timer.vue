@@ -85,9 +85,9 @@
 		      </view>
 		</view>
 
-		<!-- 下方内容区域（可滚动、占满剩余高度） -->
+		<!-- 下方内容区域 -->
 		<view class="content-scroll">
-		<!-- 下方内容区域（可滚动、占满剩余高度） -->
+		<!-- 下方内容区域 -->
 			<scroll-view class="content" scroll-y>
 			<!-- 循环显示列表项（二级子容器） -->
 				<view 
