@@ -88,7 +88,12 @@
 		<!-- 下方内容区域 -->
 		<view class="content-scroll">
 		<!-- 下方内容区域 -->
-			<scroll-view class="content" scroll-y>
+			<scroll-view 
+				class="content" 
+				scroll-y
+				:scroll-top="scrollTop"    
+				ref="scrollView"          
+			>
 			<!-- 循环显示列表项（二级子容器） -->
 				<view 
 					class="item" 
@@ -96,18 +101,35 @@
 					v-for="(item, index) in list" 
 					:key="item.id"
 					@click="setActive(index)"
+					@longpress="enterEditMode"
 				>
 					<!-- 左三级子容器 -->
 					<view class="item-left">{{ item.title }}</view>
 					<!-- 右三级子容器 -->
 					<view class="item-right">{{ item.time }}</view>
+					<!-- 选择框 -->
+					<view 
+						v-if="editMode"
+						class="check-box"
+						:class="{checked:item.checked}"
+					>
+						<text v-if="item.checked">✔</text>
+					</view>
 				</view>
 			</scroll-view>
 		</view>
 		
 		<!-- 最底部悬浮按钮（最高层级、可点击、显示图片）  -->
-		<view class="float-bottom" @click="goBottomPage">
-		    <image class="float-img" src="/pages/timer/static/R-C.jpg"  mode="widthFix"></image>
+		<view class="float-bottom" @click="bottomAction">
+		    <image 
+				v-if="!editMode"
+				class="float-img" 
+				src="/pages/timer/static/R-C.jpg"  
+				mode="widthFix"
+			>
+			</image>
+			<!-- 删除模式 -->
+			<text v-else class="delete-text">删除</text>
 		</view>
 		
 	</view>
@@ -142,15 +164,20 @@
 				second: 0,
 				scrollTopS: 0,
 				startScrollTopS: 0,
-				// 时间列表初始配置
-				list: [
-				      { id: 1001, title: "读书", time: "01:00:00" },
-				      { id: 1002, title: "绘画", time: "02:00:00" },
-				      { id: 1003, title: "编程", time: "03:00:00" },
-					  
-				],
-				// 新增：记录当前点击的索引
+				 // 读取本地存储，没有则使用默认值
+				list: uni.getStorageSync('timeList') 
+					? JSON.parse(uni.getStorageSync('timeList')) 
+					: [
+						{ id: 1001, title: "读书", time: "01:00:00", checked: false },
+						{ id: 1002, title: "绘画", time: "02:00:00", checked: false },
+						{ id: 1003, title: "编程", time: "03:00:00", checked: false },
+					  ],
+				// 记录当前点击的索引
 				activeIndex: -1, 
+				// 是否进入删除模式
+				editMode: false,
+				// 新增：控制滚动位置
+				scrollTop: 0,   
 			};
 		},
 		onLoad() {
@@ -221,6 +248,23 @@
 				});
 			},
 			
+			// 底部按钮点击
+			  bottomAction() {
+			
+			    // 普通模式
+			    if (!this.editMode) {
+			      this.goBottomPage()
+			      return
+			    }
+			
+			    // 删除选中
+			    this.list = this.list.filter(item => !item.checked)
+				
+				// 保存删除
+				this.saveList();
+			    // 退出编辑模式
+			    this.editMode = false
+			  },
 			// 点击底部悬浮图片 → 跳转到新页面（修复 NaN 版本）
 			goBottomPage() {
 			    console.log(this.$data)
@@ -259,6 +303,12 @@
 			  this.setWheelTo("H", "hour", h);
 			  this.setWheelTo("M", "minute", m);
 			  this.setWheelTo("S", "second", s);
+			  
+			  //加入checked更新
+			  //编辑模式：选择
+			  if (this.editMode) {
+				this.list[index].checked = !this.list[index].checked
+			  }
 			},
 			
 			setWheelTo(type, fulltype, value) {
@@ -271,6 +321,21 @@
 			  this[`scrollTop${type}`] = idx  * this.itemHeight;
 			  this[type.toLowerCase()] = value;
 			},
+			// 长按进入编辑模式
+			enterEditMode() {
+				this.editMode = true
+			},
+			// 保存到本地
+			saveList() {
+			  uni.setStorageSync("timeList", JSON.stringify(this.list));
+			},
+			// 新增：滚动到列表最底部
+			scrollToBottom() {
+			  // 延迟一小帧，确保列表已渲染完成
+			  setTimeout(() => {
+			    this.scrollTop = 999999; // 直接设一个超大数，自动到底部
+			  }, 10);
+			}
 		},
 	};
 </script>
@@ -430,6 +495,39 @@
 		left: 50%;          /* 水平居中 */
 		transform: translateX(-50%); /* 水平居中 */
 		z-index: 999;       /* 保证在最上层，不被盖住 */
+	}
+	.check-box{
+	  width:40rpx;
+	  height:40rpx;
+	  border:2rpx solid #ccc;
+	  border-radius:6rpx;
+	  display:flex;
+	  align-items:center;
+	  justify-content:center;
+	}
+	
+	.check-box.checked{
+	  background:#007aff;
+	  color:#fff;
+	  border-color:#007aff;
+	}
+	/* 删除按钮 */
+	.delete-text{
+	  color:#ffffff;
+	  font-size:38rpx;
+	  
+	  /* 按钮盒子样式 */
+	background-color: #007aff; /* 红色按钮 */
+	padding: 20rpx 60rpx;
+	border-radius: 50rpx; /* 圆角 */
+	box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
+	    
+		
+	  position: fixed;    /* 固定定位，脱离文档流 */
+	  bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
+	  left: 50%;          /* 水平居中 */
+	  transform: translateX(-50%); /* 水平居中 */
+	  z-index: 999;       /* 保证在最上层，不被盖住 */
 	}
 </style>
 

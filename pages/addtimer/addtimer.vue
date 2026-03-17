@@ -239,7 +239,8 @@ export default {
       const newItem = {
         id: Date.now(), // 例如：1710324567890，绝对唯一
         title: text,
-        time: time
+        time: time,
+		checked: false
       };
        
       console.log(newItem.id);
@@ -262,7 +263,11 @@ export default {
         });
 		prevPage.$vm.list = [...currentList, newItem];
 		const newIndex = prevPage.$vm.list.length - 1;
-		prevPage.$vm.setActive(newIndex); 
+		prevPage.$vm.setActive(newIndex);
+		// 保存
+		prevPage.$vm.saveList(); 
+		// 新增：滑到底
+		prevPage.$vm.scrollToBottom() 
       }
       console.log(prevPage.$vm.list);
 	  

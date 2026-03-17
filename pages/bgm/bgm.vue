@@ -34,14 +34,17 @@ export default {
         { name: "小溪流水" },
         { name: "雨夜" }
       ],
-      // 默认选中第一个（下标0）
-      currentIndex: 0
+      // 新增：保留数据 或 默认选中第一个（下标0）
+      currentIndex: uni.getStorageSync('selectedMusicIndex') || 0
     };
   },
   methods: {
     // 点击切换选中
     selectItem(index) {
       this.currentIndex = index;
+	  
+	  // 2. 保存到本地存储（永久保存）
+	  uni.setStorageSync('selectedMusicIndex', index);
     }
   }
 };
@@ -63,7 +66,8 @@ export default {
   background: #fff;
   border-radius: 20rpx;
   padding: 30rpx;
-  box-sizing: border-box;  /* ← 加这行，防止padding撑出屏幕 */
+  /* 防止padding撑出屏幕 */
+  box-sizing: border-box;  
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
 }
 
