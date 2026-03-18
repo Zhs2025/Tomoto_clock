@@ -5,7 +5,7 @@
 			<text class="title">{{title}}</text>
 		</view>
 		<view class="button-area">
-			<button @click="button_click" class="button">点击以开始</button>
+			<button @click="button_click" class="button">开始</button>
 		</view>
 	</view>
 </template>
@@ -44,7 +44,12 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		min-height: 100vh;  /* ← 加这行 */
+		box-sizing: border-box;  /* ← 加这行，防止padding撑出屏幕 */
+		height: 100vh;        /* 固定高度 = 屏幕高度，不被内容撑大 */
+		overflow: hidden;     /* 超出部分直接隐藏，最关键 */
+		
+		
 	}
 
 	.logo {
@@ -54,28 +59,55 @@
 		margin-left: auto;
 		margin-right: auto;
 		margin-bottom: 50rpx;
+		/* 关键：变成圆形 */
+		  border-radius: 25%;
+		  
+		  /* 可选：让圆形更美观，加个白色边框 */
+		  border: 4rpx solid #ffffff;
+		  
+		  /* 防止图片变形 */
+		  object-fit: cover;
 	}
 
 	.text-area {
 		display: flex;
 		justify-content: center;
+		margin-bottom: 60rpx;
 	}
 
 	.title {
-		font-size: 36rpx;
-		color: #8f8f94;
+		font-size: 38rpx;
+		color: #007aff;
 		margin-bottom: 50rpx;
 	}
 	
 	.botton-area {
 		display: flex;
 		justify-content: center;
+		
 	}
 	
 	.button {
 		height: 70rpx;
 		width: 170rpx;
-		color: #8f8f94;
-		font-size: 24rpx;
+		
+		font-size: 28rpx;
+		/* 字体加粗 */
+		font-weight: bold;
+		background-color:#007aff;
+		
+		/* 按钮边框 + 样式 */
+		  color: #ffffff;
+		  border: 2rpx solid #007aff; /* 边框 */
+		  border-radius: 24rpx; /* 圆角 */
+		  
+		  text-align: center;
+		  line-height: 70rpx; /* 垂直居中 */
+		  
+		  /* 🔥 核心：字体完全居中 */
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    text-align: center;
 	}
 </style>

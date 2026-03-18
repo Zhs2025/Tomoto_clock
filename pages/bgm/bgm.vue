@@ -11,13 +11,13 @@
         <!-- 选项1 -->
         <view class="item" @click="selectItem(0)">
           <text class="name">{{ musicList[0].name }}</text>
-          <view :class="['circle', currentIndex === 0 ? 'active' : '']"></view>
+          <view :class="['circle', currentMusicIndex === 0 ? 'active' : '']"></view>
         </view>
         
         <!-- 选项2 -->
         <view class="item" @click="selectItem(1)">
           <text class="name">{{ musicList[1].name }}</text>
-          <view :class="['circle', currentIndex === 1 ? 'active' : '']"></view>
+          <view :class="['circle', currentMusicIndex === 1 ? 'active' : '']"></view>
         </view>
         
       </view>
@@ -35,15 +35,16 @@ export default {
         { name: "雨夜" }
       ],
       // 新增：保留数据 或 默认选中第一个（下标0）
-      currentIndex: uni.getStorageSync('selectedMusicIndex') || 0
+      currentMusicIndex: uni.getStorageSync('selectedMusicIndex') || 0
     };
   },
   methods: {
     // 点击切换选中
     selectItem(index) {
-      this.currentIndex = index;
+      this.currentMusicIndex = index;
 	  
-	  // 2. 保存到本地存储（永久保存）
+	  // 2. 保存音乐列表和音乐下标到本地存储（永久保存）
+	  uni.setStorageSync('musicList', this.musicList);
 	  uni.setStorageSync('selectedMusicIndex', index);
     }
   }

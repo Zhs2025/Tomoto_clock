@@ -86,7 +86,7 @@
 				class="input-wrapper" 
 				:class="{active: inputActive}" 
 				@click="focusInput"
-			>
+			    >
 				<input 
 					v-model="inputText" 
 					class="input"
@@ -107,7 +107,15 @@
 			
 			<!-- 下-下二级容器：点击跳转页面 -->
 			<view class="jump-item" @click="goToOtherPage">
-				背景音乐
+				<!-- 左侧文字 -->
+				<view class="jump-left">
+				<!-- 主标题 -->
+				  <view class="jump-title">背景音乐</view>
+				<!-- 子标题：显示当前选中的音乐（灰色小字） -->
+				  <view class="jump-subtitle">{{ currentMusic }}</view>
+				</view>
+				  <!-- 右侧灰色箭头 -->
+				  <view class="jump-arrow"></view>
 			</view>
 		</view>
     </view>
@@ -145,6 +153,10 @@ export default {
       // 输入框
       inputText: "",
       inputActive: false,
+	  
+	  // 当前背景音乐
+	  currentMusic: "小溪流水",
+	  musicIndex: 0,
     };
   },
   onLoad() {
@@ -231,7 +243,11 @@ export default {
 	},
     // ========== 点击右上角：返回上一页 + 传参 ==========
     goBackWithData() {
-      const time = `${this.hour}:${this.minute}:${this.second}`;
+      // 格式化时间，确保都是两位
+      const formatTime = (num) => num.toString().padStart(2, '0');
+      
+      // 组合成 HH:MM:SS
+      const time = `${formatTime(this.hour)}:${formatTime(this.minute)}:${formatTime(this.second)}`;
       const text = this.inputText || '专注时间';
       console.log(time);
       console.log(text);
@@ -321,21 +337,21 @@ export default {
 
 /* 中部：轮盘  */
 .middle-section {
-  display: flex;
-  align-items: flex-start; 
-  justify-content: center;
-  background-color: #ffffff;
-  margin-bottom: 40rpx;
-  width: 80%;
-   margin-left: auto;
-     margin-right: auto;
-   
-     /* 增加圆角和阴影，让它更像一张独立的卡片 */
-     border-radius: 20rpx;
-     box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
-     
-     /* 内部内边距，防止内容贴到白色边缘 */
-     padding: 30rpx; 
+	display: flex;
+	align-items: flex-start; 
+	justify-content: center;
+	background-color: #ffffff;
+	margin-bottom: 40rpx;
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+
+	/* 增加圆角和阴影，让它更像一张独立的卡片 */
+	border-radius: 20rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+
+	/* 内部内边距，防止内容贴到白色边缘 */
+	padding: 30rpx; 
 }
 .time-picker {
   display: flex;
@@ -388,7 +404,7 @@ export default {
 
 /* 下部 */
 .bottom-section {
-  height: 160rpx;
+  height: 200rpx;
   width: 80%; /* 宽度必须和中部完全一致 */
   margin-left: auto;
   margin-right: auto;
@@ -415,6 +431,7 @@ export default {
 /* 输入框 + 点击下划线高亮 */
 .input-wrapper {
   position: relative; /* 【关键】作为定位父级 */
+  padding: 20rpx 0;
   height: 80rpx;
   border-bottom: 2rpx solid #f9f9f9;
   display: flex;
@@ -453,9 +470,45 @@ export default {
 }
 /* 点击跳转项 */
 .jump-item {
-  height: 80rpx;
-  line-height: 80rpx;
+	/* ✅ 核心修复：开启 Flex 布局，让子元素横向排列 */
+	display: flex; 
+	/* ✅ 关键：不被父flex拉伸高度！*/
+	align-self: flex-start;  
+	/* 左右分开 */
+	justify-content: space-between; 
+	/* 垂直居中 */
+	align-items: center; 
+	padding: 20rpx 0;
+	width: 100%;   
+	height: 100rpx; 
+	/* 内部行距：最小不重合 */
+	line-height: 1;
+}
+/* 左侧内容 */
+.jump-left {
+   /* 占满剩余空间，保证点击区域 */
+  flex: 1;
+}
+/* 主标题 */
+.jump-title {
   font-size: 34rpx;
   color: #333;
+}
+/* 子标题：当前音乐名 */
+.jump-subtitle {
+  font-size: 30rpx;
+  color: #999;
+  margin-top: 10rpx;
+}
+/* 右侧箭头 */
+.jump-arrow {
+  margin-right: 20rpx;
+}
+/* 直接在CSS里写箭头 */
+.jump-arrow::after {
+  content: ">";  
+  font-weight: bold;
+  color: #999;
+  font-size: 32rpx;
 }
 </style>

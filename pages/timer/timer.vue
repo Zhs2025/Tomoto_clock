@@ -119,8 +119,17 @@
 			</scroll-view>
 		</view>
 		
-		<!-- 最底部悬浮按钮（最高层级、可点击、显示图片）  -->
+		<!-- 最底部悬浮按钮区域 -->
+		<!-- 不使用 float-bottom 样式，后面的样式都是绝对位置 -->
 		<view class="float-bottom" @click="bottomAction">
+			<!-- 新增：编辑按钮（只有 editMode 为 true 时才显示） -->
+			  <text 
+			    class="edit-text" 
+			    @click="editTextAction"
+			    v-if="editMode"  
+			  >
+			    编辑
+			  </text>
 		    <image 
 				v-if="!editMode"
 				class="float-img" 
@@ -130,6 +139,7 @@
 			</image>
 			<!-- 删除模式 -->
 			<text v-else class="delete-text">删除</text>
+			
 		</view>
 		
 	</view>
@@ -168,16 +178,18 @@
 				list: uni.getStorageSync('timeList') 
 					? JSON.parse(uni.getStorageSync('timeList')) 
 					: [
-						{ id: 1001, title: "读书", time: "01:00:00", checked: false },
-						{ id: 1002, title: "绘画", time: "02:00:00", checked: false },
-						{ id: 1003, title: "编程", time: "03:00:00", checked: false },
+						{ id: 1001, title: "读书", time: "01:00:00", checked: false, music: 0  },
+						{ id: 1002, title: "绘画", time: "02:00:00", checked: false, music: 0  },
+						{ id: 1003, title: "编程", time: "03:00:00", checked: false, music: 0  },
 					  ],
 				// 记录当前点击的索引
 				activeIndex: -1, 
 				// 是否进入删除模式
 				editMode: false,
-				// 新增：控制滚动位置
-				scrollTop: 0,   
+				// 控制滚动位置
+				scrollTop: 0,  
+				// 新增：当前音乐
+				currentMusic: 0,
 			};
 		},
 		onLoad() {
@@ -276,6 +288,7 @@
 			
 			    // 🔥 格式化时间：永远是 00:00:00 格式，永不出错
 			    const selectedTime = `${h}:${m}:${s}`
+				
 			
 			    // 获取标题
 			    let inputText = ""
@@ -283,13 +296,17 @@
 			        inputText = this.list[this.activeIndex].title
 			    }
 			
+				// 获取音乐编号
+				const music = Number(this.currentMusic) || 0
+				
 			    // 输出调试
 			    console.log('最终传递时间：', selectedTime)
 			    console.log('最终传递标题：', inputText)
+				console.log('最终传递音乐：',music)
 			
 			    // 跳转
 			    uni.navigateTo({
-			        url: `/pages/timing/timing?selectedTime=${encodeURIComponent(selectedTime)}&inputText=${encodeURIComponent(inputText)}`
+			        url: `/pages/timing/timing?selectedTime=${encodeURIComponent(selectedTime)}&inputText=${encodeURIComponent(inputText)}&music=${music}`
 			    })
 			},
 			
@@ -315,6 +332,7 @@
 			  value = Number(value);
 			  let list = this[`${fulltype}List`];
 			  let idx = list.indexOf(value);
+			  // 计算一次全列表元素长度，用于初始显示到第二次循环
 			  let smoothShow = list.length / 4;
 			  idx += smoothShow;
 			  this[`currentIndex${type}`] = idx;
@@ -335,6 +353,11 @@
 			  setTimeout(() => {
 			    this.scrollTop = 999999; // 直接设一个超大数，自动到底部
 			  }, 10);
+			},
+			editTextAction() {
+				uni.navigateTo({
+					url: '/pages/addtimer/addtimer'  
+				});
 			}
 		},
 	};
@@ -485,17 +508,6 @@
 	  color: #999;
 	}
 	
-	/* 图片 */
-	.float-img {
-	    width: 150rpx;
-		height: 150rpx;
-		/* 下面是固定定位关键代码 */
-		position: fixed;    /* 固定定位，脱离文档流 */
-		bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
-		left: 50%;          /* 水平居中 */
-		transform: translateX(-50%); /* 水平居中 */
-		z-index: 999;       /* 保证在最上层，不被盖住 */
-	}
 	.check-box{
 	  width:40rpx;
 	  height:40rpx;
@@ -511,23 +523,50 @@
 	  color:#fff;
 	  border-color:#007aff;
 	}
+	
+	
+	/* 图片 */
+	.float-img {
+	    width: 150rpx;
+		height: 150rpx;
+		/* 下面是固定定位关键代码 */
+		position: fixed;    /* 固定定位，脱离文档流 */
+		bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
+		left: 50%;          /* 水平居中 */
+		transform: translateX(-50%); /* 水平居中 */
+		z-index: 999;       /* 保证在最上层，不被盖住 */
+	}
+	/* 删除按钮 */
+	.edit-text{
+		color:#ffffff;
+		font-size:38rpx;
+	
+		/* 按钮盒子样式 */
+		background-color: #007aff; 
+		padding: 20rpx 60rpx;
+		border-radius: 50rpx; /* 圆角 */
+		box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
+	
+	
+		position: fixed;    /* 固定定位，脱离文档流 */
+		bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
+		left: 100rpx;
+	}
 	/* 删除按钮 */
 	.delete-text{
-	  color:#ffffff;
-	  font-size:38rpx;
-	  
-	  /* 按钮盒子样式 */
-	background-color: #007aff; /* 红色按钮 */
-	padding: 20rpx 60rpx;
-	border-radius: 50rpx; /* 圆角 */
-	box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
-	    
-		
-	  position: fixed;    /* 固定定位，脱离文档流 */
-	  bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
-	  left: 50%;          /* 水平居中 */
-	  transform: translateX(-50%); /* 水平居中 */
-	  z-index: 999;       /* 保证在最上层，不被盖住 */
+		color:#ffffff;
+		font-size:38rpx;
+
+		/* 按钮盒子样式 */
+		background-color: #007aff; 
+		padding: 20rpx 60rpx;
+		border-radius: 50rpx; /* 圆角 */
+		box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
+
+
+		position: fixed;    /* 固定定位，脱离文档流 */
+		bottom: 150rpx;     /* 距离底部 150rpx（你原来的 margin-bottom） */
+		right: 100rpx;
 	}
 </style>
 
