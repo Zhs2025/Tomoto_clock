@@ -255,9 +255,19 @@
 			
 			// 添加键跳转，添加时间列表元素
 			goAddPage() {
+				const musicList = uni.getStorageSync('musicList')|| [
+					{ name: "小溪流水" },
+					{ name: "雨夜" }
+				  ];
+				console.log(musicList);
+				const currentMusicIndex = uni.getStorageSync('selectedMusicIndex') || 0;
+				console.log(currentMusicIndex);
+				const currentMusicName = musicList[currentMusicIndex].name;
+
 				uni.navigateTo({
-					url: '/pages/addtimer/addtimer'  // 改成你自己的添加页面路径
+					url: '/pages/addtimer/addtimer'  
 				});
+				console.log("当前播放音乐：", currentMusicName);
 			},
 			
 			// 底部按钮点击

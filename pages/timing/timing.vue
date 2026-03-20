@@ -31,7 +31,15 @@
   </view>
 </template>
 
+
+
+
 <script>
+	
+// 新增：【页面最顶部】音频实例（唯一）
+// 由于是全局变量，必须在onunload 和 onHide 中 释放
+const innerAudioContext = uni.createInnerAudioContext();
+
 export default {
   data() {
     return {
@@ -48,6 +56,8 @@ export default {
       // 播放状态
       isPaused: false,
       timer: null,
+	  // 默认背景音乐路径
+	  bgAudioSrc: "/static/bubbling-brook2.mp3" 
     };
   },
 
@@ -68,14 +78,21 @@ export default {
         this.startCountdown()
   },
 
-  onUnload() {
-    // 页面销毁清除定时器
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-  },
-
+	onUnload() {
+		// 页面销毁清除定时器
+		if (this.timer) {
+		  clearInterval(this.timer);
+		  this.timer = null;
+		}
+		// 页面销毁清除背景音乐
+		this.stopBGM();
+	},
+	
+	onHide() {
+		// 页面隐藏清除背景音乐
+		this.stopBGM();
+	},
+	
   methods: {
     // 初始化时间
     initCountdown() {
@@ -98,25 +115,38 @@ export default {
 
     // 开始倒计时
     startCountdown() {
-      if (this.timer) clearInterval(this.timer);
+		if (this.timer) clearInterval(this.timer);
 
-      this.timer = setInterval(() => {
-        if (this.isPaused || this.remainSeconds <= 0) {
-          if (this.remainSeconds <= 0) {
-            clearInterval(this.timer);
-            this.showTime = "00:00:00";
-          }
-          return;
-        }
+		// 开始倒计时调用播放背景音乐函数
+		this.playBGM();
+		this.timer = setInterval(() => {
+			if (this.isPaused || this.remainSeconds <= 0) {
+				if (this.remainSeconds <= 0) {
+					clearInterval(this.timer);
+					this.showTime = "00:00:00";
+					// 倒计时结束  停止音乐
+					this.stopBGM();
+				}
+				return;
+			}
 
-        this.remainSeconds--;
-        this.showTime = this.secToTime(this.remainSeconds);
-      }, 1000);
-    },
+			this.remainSeconds--;
+			this.showTime = this.secToTime(this.remainSeconds);
+		}, 1000);
+		
+	},
 
     // 暂停 / 播放切换
     togglePlay() {
-      this.isPaused = !this.isPaused;
+		this.isPaused = !this.isPaused;
+		// 音频暂停逻辑
+		if (this.isPaused) {
+			// 暂停倒计时 → 暂停音乐
+			innerAudioContext.pause();
+		} else {
+			// 继续倒计时 → 继续播放音乐
+			innerAudioContext.play();
+		}
     },
 
     // 计算结束时间（时分）
@@ -150,6 +180,21 @@ export default {
     goBack() {
       uni.navigateBack();
     },
+	
+	// 新增：播放音乐，循环
+	playBGM() {
+	      if (!this.bgAudioSrc) return
+	      innerAudioContext.src = this.bgAudioSrc
+	      innerAudioContext.loop = true  // 无限循环
+	      innerAudioContext.play()
+	},
+	
+	// 新增：结束播放音乐，彻底结束
+	stopBGM() {
+	      innerAudioContext.stop();
+	},
+
+
   },
 };
 </script>
