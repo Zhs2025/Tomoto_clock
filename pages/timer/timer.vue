@@ -271,7 +271,7 @@
 			},
 			
 			// 底部按钮点击
-			  bottomAction() {
+		    bottomAction() {
 			
 			    // 普通模式
 			    if (!this.editMode) {
@@ -287,33 +287,26 @@
 			    // 退出编辑模式
 			    this.editMode = false
 			  },
-			// 点击底部悬浮图片 → 跳转到新页面（修复 NaN 版本）
+			  
+			// 点击底部图片 跳转到计时页面
 			goBottomPage() {
-			    console.log(this.$data)
-			    
-			    // 🔥 强制转数字，从根源消灭 NaN
+			   
+			    // 转数字 并 格式化时间为 00:00:00 格式
 			    const h = Number(this.hour) || 0
 			    const m = Number(this.minute) || 0
 			    const s = Number(this.second) || 0
-			
-			    // 🔥 格式化时间：永远是 00:00:00 格式，永不出错
 			    const selectedTime = `${h}:${m}:${s}`
 				
-			
-			    // 获取标题
+			    // 获取标题, 先更新 后读入
 			    let inputText = ""
 			    if (this.activeIndex !== -1 && this.list[this.activeIndex]) {
 			        inputText = this.list[this.activeIndex].title
 			    }
 			
-				// 获取音乐编号
+				// 获取音乐编号, 先更新 后读入
+				this.currentMusic = this.list[this.activeIndex].music;
 				const music = Number(this.currentMusic) || 0
-				
-			    // 输出调试
-			    console.log('最终传递时间：', selectedTime)
-			    console.log('最终传递标题：', inputText)
-				console.log('最终传递音乐：',music)
-			
+							
 			    // 跳转
 			    uni.navigateTo({
 			        url: `/pages/timing/timing?selectedTime=${encodeURIComponent(selectedTime)}&inputText=${encodeURIComponent(inputText)}&music=${music}`
@@ -322,17 +315,19 @@
 			
 			// 点击列表元素设置激活项
 			setActive(index) {
+				
+			  // 设置高亮项
 			  this.activeIndex = index;
+			  
+			  // 移动选择时间盒 到 当前时间
 			  let item = this.list[index];
 			  let time = item.time;
 			  let [h, m, s] = time.split(":");
-			  
 			  this.setWheelTo("H", "hour", h);
 			  this.setWheelTo("M", "minute", m);
 			  this.setWheelTo("S", "second", s);
 			  
-			  //加入checked更新
-			  //编辑模式：选择
+			  //编辑模式选择
 			  if (this.editMode) {
 				this.list[index].checked = !this.list[index].checked
 			  }
@@ -349,10 +344,12 @@
 			  this[`scrollTop${type}`] = idx  * this.itemHeight;
 			  this[type.toLowerCase()] = value;
 			},
+			
 			// 长按进入编辑模式
 			enterEditMode() {
 				this.editMode = true
 			},
+			
 			// 保存到本地
 			saveList() {
 			  uni.setStorageSync("timeList", JSON.stringify(this.list));

@@ -42,41 +42,43 @@ const innerAudioContext = uni.createInnerAudioContext();
 
 export default {
   data() {
-    return {
-      // 接收的参数
-      givenText: "",
-      selectedTime: "", // 格式 0:0:5 或 00:01:05
+	return {
+		// 接收的参数
+		givenText: "",
+		selectedTime: "", // 格式 0:0:5 或 00:01:05
+		givenMusic: "",
 
-      // 倒计时核心
-      totalSeconds: 0,
-      remainSeconds: 0,
-      showTime: "00:00:00",
-      endTime: "",
+		// 倒计时核心
+		totalSeconds: 0,
+		remainSeconds: 0,
+		showTime: "00:00:00",
+		endTime: "",
 
-      // 播放状态
-      isPaused: false,
-      timer: null,
-	  // 默认背景音乐路径
-	  bgAudioSrc: "/static/bubbling-brook2.mp3" 
-    };
+		// 播放状态
+		isPaused: false,
+		timer: null,
+		// 默认背景音乐路径
+		bgAudioSrc: "/static/bubbling-brook2.mp3" 
+	};
   },
 
-  onLoad(options) {
-    // 接收参数
-        this.givenText = decodeURIComponent(options.inputText || '')
-        this.selectedTime = decodeURIComponent(options.selectedTime || '00:00:10')
-    
-        // 🔥 关键：强制拆分 + 转数字，彻底杜绝 NaN
-        let [h = 0, m = 0, s = 0] = this.selectedTime.split(':')
-        h = Number(h) || 0
-        m = Number(m) || 0
-        s = Number(s) || 0
-        this.selectedTime = `${h}:${m}:${s}`
-    
-        // 初始化倒计时
-        this.initCountdown()
-        this.startCountdown()
-  },
+	onLoad(options) {
+		// 接收 当前任务 和 倒计时时间 和 当前音乐
+		this.givenText = decodeURIComponent(options.inputText || '')
+		this.selectedTime = decodeURIComponent(options.selectedTime || '00:00:10')
+		this.givenMusic = decodeURIComponent(options.music || '0')
+		
+		// 确保时间为数字格式
+		let [h = 0, m = 0, s = 0] = this.selectedTime.split(':')
+		h = Number(h) || 0
+		m = Number(m) || 0
+		s = Number(s) || 0
+		this.selectedTime = `${h}:${m}:${s}`
+
+		// 初始化倒计时
+		this.initCountdown()
+		this.startCountdown()
+	},
 
 	onUnload() {
 		// 页面销毁清除定时器

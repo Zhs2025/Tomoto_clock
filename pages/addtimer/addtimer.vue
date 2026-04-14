@@ -159,15 +159,30 @@ export default {
 	  musicIndex: 0,
     };
   },
-  onLoad() {
-		// 1. 定义 CSS 中的 rpx 值
+	// ========== 页面创建时的数据导入 ==========
+	onLoad() {
+		// 1. 定义在 CSS 中的 rpx 值，需要转换成data中的单位
 		const itemHeightRpx = 100;     
-		// 2. 转换为 px (这是 scroll-top 需要的单位)
+		// 2. 转换为 px --这是 scroll-top 需要的单位
 		this.itemHeight = uni.upx2px(itemHeightRpx);
+		// 3. 完成时间选择轮盘的范围、默认值的初始化
 		this.initList("h", "hour", 0, 23, 0);
 		this.initList("m", "minute", 0, 59, 15);
 		this.initList("s", "second", 0, 59, 0);
-    },
+		// 4. 监听来自bgm的更新
+		uni.$on('musicChange', (res) => {
+		  this.musicIndex = res.musicIndex;
+		  this.currentMusic = res.currentMusic;
+		  // 调试代码，控制面板显示当前音乐
+		  console.log("音乐已同步：", this.currentMusic);
+		});
+	},
+	// ======================
+	// 在页面卸载时移除对bgm的监听
+	// ======================
+	onUnload() {
+		uni.$off('musicChange');
+	},
   methods: {
     // ========== 初始化纯循环轮盘（单列表、无高亮） ==========
     initList(type, fulltype, min, max, defaultnumber) {
@@ -235,66 +250,69 @@ export default {
 		// 这里可能需要使用 nextTick 或定时器，视具体框架表现而定
 		// setTimeout(() => { this.inputActive = true; }, 10);
 	},
-	// 点击取消，直接返回上一页
+	//  点击取消： 直接返回上一页
 	goBackWithoutData(){
 		uni.navigateTo({
 		  url: `/pages/timer/timer`,
 		});
 	},
-    // ========== 点击右上角：返回上一页 + 传参 ==========
+    //	点击完成：返回上一页 并 传参 
     goBackWithData() {
+		
       // 格式化时间，确保都是两位
       const formatTime = (num) => num.toString().padStart(2, '0');
       
-      // 组合成 HH:MM:SS
+      // 获取时间 组合成 HH:MM:SS 和 任务名称 和 当前音乐
       const time = `${formatTime(this.hour)}:${formatTime(this.minute)}:${formatTime(this.second)}`;
       const text = this.inputText || '专注时间';
-      console.log(time);
-      console.log(text);
-      // 【关键】在这里生成唯一 ID，不需要 timer 页面配合维护 nextId
+	  const music = this.musicIndex;
+      
+      // 生成 list 中的 元素 在这里生成唯一 ID，不需要 timer 页面配合维护 nextId
       const newItem = {
-        id: Date.now(), // 例如：1710324567890，绝对唯一
+        id: Date.now(), // 例如：1710324567890，确保绝对唯一
         title: text,
         time: time,
-		checked: false
+		checked: false,
+		music: music
       };
        
-      console.log(newItem.id);
-    
-      // ======================================
-      // 【只修复这里：先拿上一页、先赋值，再返回】
-      // ======================================
+      /* 
+		执行逻辑：先拿上一页、再赋值，再返回
+		pages[长度-2]，即前一页，pages[长度-1]，即本页，即栈顶 
+	  */
       const pages = getCurrentPages();
-      const prevPage = pages[pages.length - 2]; // 👈 修复成 -2
+      const prevPage = pages[pages.length - 2]; 
+	  
+	  /* 
+		保留部分经典调试代码，可供后面参考
+		注： 唯一存档点
+	  */
       console.log(prevPage.route);
       console.log(prevPage.$vm.data);
 	  console.log(prevPage.$vm);
       console.log(prevPage.$vm.list);
       
+	  // 最核心步骤： 添加新增元素
       if (prevPage) {
+		  
         const currentList = prevPage.$vm.list || [];
-        // 直接合并
-        prevPage.setData({
-          list: [...currentList, newItem]
-        });
+        // 直接合并，并调用timer 的 激活、保存、滑到底部 三大函数方法
 		prevPage.$vm.list = [...currentList, newItem];
+		
 		const newIndex = prevPage.$vm.list.length - 1;
+		
 		prevPage.$vm.setActive(newIndex);
-		// 保存
 		prevPage.$vm.saveList(); 
-		// 新增：滑到底
 		prevPage.$vm.scrollToBottom() 
       }
-      console.log(prevPage.$vm.list);
-	  
-    
-      // 然后再执行返回
+      
+      // 返回
       uni.navigateBack({
         delta: 1
       });
     },
 		
-    // ========== 底部点击：跳转到其他页面 ==========
+    // ========== 底部点击：跳转到切换音乐页面 ==========
     goToOtherPage() {
       uni.navigateTo({
         url: "/pages/bgm/bgm"

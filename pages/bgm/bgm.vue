@@ -22,6 +22,17 @@
         
       </view>
     </view>
+	<!-- 一级容器： 靠下部-->
+	<view class="second-section">
+		<!-- 左二级容器：返回但不回传 -->
+		<view class="second-left" @click="goBackWithoutData">
+			取消
+		</view>
+		<!-- 右二级容器：点击返回上一页 + 回传数据 -->
+		<view class="second-right" @click="goBackWithData">
+			完成
+		</view>
+	</view>
   </view>
 </template>
 
@@ -34,20 +45,55 @@ export default {
         { name: "小溪流水" },
         { name: "雨夜" }
       ],
-      // 新增：保留数据 或 默认选中第一个（下标0）
+      //保留数据 或 默认选中第一个（下标0的元素）
       currentMusicIndex: uni.getStorageSync('selectedMusicIndex') || 0
     };
   },
-  methods: {
-    // 点击切换选中
-    selectItem(index) {
-      this.currentMusicIndex = index;
-	  
-	  // 2. 保存音乐列表和音乐下标到本地存储（永久保存）
-	  uni.setStorageSync('musicList', this.musicList);
-	  uni.setStorageSync('selectedMusicIndex', index);
-    }
-  }
+	methods: {
+		// 点击切换选中
+		selectItem(index) {
+			
+			// 1. 保存选中的项目
+			this.currentMusicIndex = index;
+
+			// 2. 保存音乐列表和音乐下标到本地存储，实现永久保存
+			uni.setStorageSync('musicList', this.musicList);
+			uni.setStorageSync('selectedMusicIndex', index);
+
+			/* // 
+				注意： 这种方法需要点击，存储在本地的数据不能更新
+					所以，会导致，bgm的音乐和addtimer的音乐不一致，因为bgm当前显示的未被点击
+			    功能： 发送全局事件，在addtimer中同步修改
+				作用： 目前可有可无，暂时保留
+			*/
+			uni.$emit('musicChange', {
+				musicIndex: index,
+				currentMusic: this.musicList[index].name
+			});
+		},
+		// 直接返回按键
+		goBackWithoutData(){
+			uni.navigateTo({
+			  url: `/pages/addtimer/addtimer`,
+			});
+		},
+		// 带着数据返回按键
+		goBackWithData() {
+			// 获取上一页实例，下两行
+			const pages = getCurrentPages();
+			const prevPage = pages[pages.length - 2]; 
+			
+			/* 
+			   经过实验证明，使用prevPage.setData方法，是不行的，只能使用下面的方法
+			   而应该 直接通过实例修改当前选中的音乐信息
+			*/
+			prevPage.$vm.musicIndex = this.currentMusicIndex;
+			prevPage.$vm.currentMusic = this.musicList[this.currentMusicIndex].name;
+			
+			// 返回上一页
+			uni.navigateBack();
+		}
+	}
 };
 </script>
 
@@ -70,6 +116,7 @@ export default {
   /* 防止padding撑出屏幕 */
   box-sizing: border-box;  
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 20rpx;
 }
 
 /* 二级子容器1：标题 */
@@ -120,5 +167,40 @@ export default {
 .circle.active {
   border-color: #007aff; /* 统一高亮颜色 */
   background-color: rgba(7, 193, 96, 0.1);
+}
+/* 字体样式 */
+.second-left {
+  font-size: 34rpx;
+  padding: 0 10rpx;
+  color: #ffffff;
+  
+  /* 按钮盒子样式 */
+  background-color: #007aff; 
+  padding: 20rpx 60rpx;
+  border-radius: 50rpx; /* 圆角 */
+  box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
+  
+}
+.second-right {
+  font-size: 34rpx;
+  padding: 0 10rpx;
+  color: #ffffff;
+  
+  /* 按钮盒子样式 */
+  background-color: #007aff; 
+  padding: 20rpx 60rpx;
+  border-radius: 50rpx; /* 圆角 */
+  box-shadow: 0 6rpx 16rpx rgba(255, 59, 48, 0.3); /* 阴影更高级 */
+}
+
+/* 第二个一级子容器 */
+.second-section {
+  height: 90rpx;
+  padding: 0 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1rpx solid #eee;
+  margin-bottom: 20rpx;
 }
 </style>
