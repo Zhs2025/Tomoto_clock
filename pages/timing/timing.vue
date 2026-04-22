@@ -31,36 +31,35 @@
   </view>
 </template>
 
-
-
-
 <script>
 	
-// 新增：【页面最顶部】音频实例（唯一）
-// 由于是全局变量，必须在onunload 和 onHide 中 释放
+/* 音频实例
+   全局变量，须在onunload 和 onHide 中 释放 */
 const innerAudioContext = uni.createInnerAudioContext();
 
 export default {
-  data() {
-	return {
-		// 接收的参数
-		givenText: "",
-		selectedTime: "", // 格式 0:0:5 或 00:01:05
-		givenMusic: "",
+	data() {
+		return {
+			// 接收的参数
+			givenText: "",
+			selectedTime: "", // 格式 0:0:5 或 00:01:05
+			givenMusic: "",
 
-		// 倒计时核心
-		totalSeconds: 0,
-		remainSeconds: 0,
-		showTime: "00:00:00",
-		endTime: "",
+			// 倒计时核心
+			totalSeconds: 0,
+			remainSeconds: 0,
+			showTime: "00:00:00",
+			endTime: "",
 
-		// 播放状态
-		isPaused: false,
-		timer: null,
-		// 默认背景音乐路径
-		bgAudioSrc: "/static/bubbling-brook2.mp3" 
-	};
-  },
+			// 播放状态
+			isPaused: false,
+			timer: null,
+			
+			// 默认背景音乐路径 第一音乐地址
+			bgAudioSrc: "/static/bubbling-brook2.mp3" ,
+			// 第二音乐地址 /static/rain-noisy-distant-active.mp3
+		};
+	},
 
 	onLoad(options) {
 		// 接收 当前任务 和 倒计时时间 和 当前音乐
@@ -95,110 +94,118 @@ export default {
 		this.stopBGM();
 	},
 	
-  methods: {
-    // 初始化时间
-    initCountdown() {
-      // 拆分时分秒
-      let [h, m, s] = this.selectedTime.split(":");
-      h = Number(h);
-      m = Number(m);
-      s = Number(s);
+	methods: {
+		// 初始化时间
+		initCountdown() {
+			// 拆分时分秒
+			let [h, m, s] = this.selectedTime.split(":");
+			h = Number(h);
+			m = Number(m);
+			s = Number(s);
 
-      // 总秒数
-      this.totalSeconds = h * 3600 + m * 60 + s;
-      this.remainSeconds = this.totalSeconds;
+			// 总秒数
+			this.totalSeconds = h * 3600 + m * 60 + s;
+			this.remainSeconds = this.totalSeconds;
 
-      // 显示格式化时间
-      this.showTime = this.formatTime(h, m, s);
+			// 显示格式化时间
+			this.showTime = this.formatTime(h, m, s);
 
-      // 计算结束时间（当前 + 倒计时，只显示时分）
-      this.calcEndTime();
-    },
+			// 计算结束时间（当前 + 倒计时，只显示时分）
+			this.calcEndTime();
+		},
 
-    // 开始倒计时
-    startCountdown() {
-		if (this.timer) clearInterval(this.timer);
+		// 开始倒计时
+		startCountdown() {
+			if (this.timer) clearInterval(this.timer);
 
-		// 开始倒计时调用播放背景音乐函数
-		this.playBGM();
-		this.timer = setInterval(() => {
-			if (this.isPaused || this.remainSeconds <= 0) {
-				if (this.remainSeconds <= 0) {
-					clearInterval(this.timer);
-					this.showTime = "00:00:00";
-					// 倒计时结束  停止音乐
-					this.stopBGM();
+			// 开始倒计时调用播放背景音乐函数
+			this.playBGM();
+			this.timer = setInterval(() => {
+				if (this.isPaused || this.remainSeconds <= 0) {
+					if (this.remainSeconds <= 0) {
+						clearInterval(this.timer);
+						this.showTime = "00:00:00";
+						// 倒计时结束  停止音乐
+						this.stopBGM();
+					}
+					return;
 				}
-				return;
+
+				this.remainSeconds--;
+				this.showTime = this.secToTime(this.remainSeconds);
+			}, 1000);
+			
+		},
+
+		// 暂停 / 播放切换
+		togglePlay() {
+			this.isPaused = !this.isPaused;
+			// 音频暂停逻辑
+			if (this.isPaused) {
+				// 暂停倒计时 → 暂停音乐
+				innerAudioContext.pause();
+			} else {
+				// 继续倒计时 → 继续播放音乐
+				innerAudioContext.play();
 			}
+		},
 
-			this.remainSeconds--;
-			this.showTime = this.secToTime(this.remainSeconds);
-		}, 1000);
+		// 计算结束时间（时分）
+		calcEndTime() {
+		  let now = new Date();
+		  let end = new Date(now.getTime() + this.totalSeconds * 1000);
+		  let hh = this.pad(end.getHours());
+		  let mm = this.pad(end.getMinutes());
+		  this.endTime = `${hh}:${mm}`;
+		},
+
+		// 秒数转时分秒
+		secToTime(sec) {
+		  let h = this.pad(Math.floor(sec / 3600));
+		  let m = this.pad(Math.floor((sec % 3600) / 60));
+		  let s = this.pad(sec % 60);
+		  return `${h}:${m}:${s}`;
+		},
+
+		// 格式化显示
+		formatTime(h, m, s) {
+		  return `${this.pad(h)}:${this.pad(m)}:${this.pad(s)}`;
+		},
+
+		// 补零
+		pad(n) {
+		  return n < 10 ? "0" + n : n;
+		},
+
+		// 返回上一页
+		goBack() {
+		  uni.navigateBack();
+		},
 		
+		// 播放音乐 并 在未结束时无限循环
+		playBGM() {
+			  if (!this.bgAudioSrc) return
+			  
+			  // 确定 播放音乐的地址
+			  if (this.givenMusic == 0){
+				  innerAudioContext.src = this.bgAudioSrc;
+			  }
+			  else if(this.givenMusic == 1){
+				  innerAudioContext.src = "/static/rain-noisy-distant-active.mp3";
+			  }
+			  
+			  // 无限循环 并 播放
+			  innerAudioContext.loop = true  
+			  innerAudioContext.play()
+		},
+		
+		// 结束播放音乐 彻底结束
+		stopBGM() {
+			  innerAudioContext.stop();
+		},
+
 	},
-
-    // 暂停 / 播放切换
-    togglePlay() {
-		this.isPaused = !this.isPaused;
-		// 音频暂停逻辑
-		if (this.isPaused) {
-			// 暂停倒计时 → 暂停音乐
-			innerAudioContext.pause();
-		} else {
-			// 继续倒计时 → 继续播放音乐
-			innerAudioContext.play();
-		}
-    },
-
-    // 计算结束时间（时分）
-    calcEndTime() {
-      let now = new Date();
-      let end = new Date(now.getTime() + this.totalSeconds * 1000);
-      let hh = this.pad(end.getHours());
-      let mm = this.pad(end.getMinutes());
-      this.endTime = `${hh}:${mm}`;
-    },
-
-    // 秒数转时分秒
-    secToTime(sec) {
-      let h = this.pad(Math.floor(sec / 3600));
-      let m = this.pad(Math.floor((sec % 3600) / 60));
-      let s = this.pad(sec % 60);
-      return `${h}:${m}:${s}`;
-    },
-
-    // 格式化显示
-    formatTime(h, m, s) {
-      return `${this.pad(h)}:${this.pad(m)}:${this.pad(s)}`;
-    },
-
-    // 补零
-    pad(n) {
-      return n < 10 ? "0" + n : n;
-    },
-
-    // 返回上一页
-    goBack() {
-      uni.navigateBack();
-    },
-	
-	// 新增：播放音乐，循环
-	playBGM() {
-	      if (!this.bgAudioSrc) return
-	      innerAudioContext.src = this.bgAudioSrc
-	      innerAudioContext.loop = true  // 无限循环
-	      innerAudioContext.play()
-	},
-	
-	// 新增：结束播放音乐，彻底结束
-	stopBGM() {
-	      innerAudioContext.stop();
-	},
-
-
-  },
-};
+}
 </script>
 
 <style scoped>
@@ -260,7 +267,8 @@ export default {
   bottom: 100rpx; 
   /* 3. 通常固定定位的元素需要手动设置宽度，否则可能塌陷或占满 */
   width: 100%; 
-  box-sizing: border-box; /* 确保 padding 不会撑大宽度导致溢出 */
+  /* 确保 padding 不会撑大宽度导致溢出 */
+  box-sizing: border-box; 
   height: 200rpx;
   display: flex;
   align-items: center;

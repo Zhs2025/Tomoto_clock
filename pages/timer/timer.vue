@@ -304,8 +304,10 @@
 			    }
 			
 				// 获取音乐编号, 先更新 后读入
-				this.currentMusic = this.list[this.activeIndex].music;
-				const music = Number(this.currentMusic) || 0
+				if (this.activeIndex !== -1 && this.list[this.activeIndex]) {
+				    this.currentMusic = this.list[this.activeIndex].music;
+				}
+				const music = Number(this.currentMusic) || 0;
 							
 			    // 跳转
 			    uni.navigateTo({
